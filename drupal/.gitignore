@@ -1,0 +1,39 @@
+# Ignore Drupal stuff #
+########################
+/web/CHANGELOG.txt
+/web/COPYRIGHT.txt
+/web/INSTALL*.txt
+/web/LICENSE.txt
+/web/MAINTAINERS.txt
+/web/README.txt
+/web/update.php
+/web/sites/all/modules/README.txt
+/web/sites/all/themes/README.txt
+/web/sites/README.txt
+/web/UPGRADE.txt
+/web/core
+/web/modules/contrib
+/web/modules/local
+/web/profiles/contrib
+/web/sites/default/files
+/web/sites/simpletest
+/web/themes/contrib
+
+# Continuous Integration #
+##########################
+/bin
+/vendor
+/app/test-output.html
+/build
+
+# Dev files #
+#############
+.docker
+.vagrant
+.idea
+.php
+/app/sites/default/settings.local.php
+/app/sites/default/settings.local.*.php
+/mariadb-init
+/drush/contrib
+.env

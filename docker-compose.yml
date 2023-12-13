@@ -1,0 +1,86 @@
+x-otel-common:
+  &otel-common
+  OTEL_PHP_AUTOLOAD_ENABLED: true
+  OTEL_SERVICE_NAME: drupal
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: http/protobuf
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+  OTEL_PHP_TRACES_PROCESSOR: simple
+
+version: "3.8"
+
+services:
+
+  ##################
+  # Network
+  #   Used for establishing a common network which other
+  #   containers are running in.
+  ##################
+
+  network:
+    image: public.ecr.aws/eks-distro/kubernetes/pause:v1.24.17-eks-1-24-latest
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+      - "${MYSQL_PORT:-3306}:3306"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ##################
+  # Web
+  ##################
+
+  nginx:
+    build:
+      context: ./docker/compose/nginx
+    network_mode: service:network
+    volumes:
+      - ./:/data
+
+  php-fpm:
+    build:
+      context: ./docker/compose/php-fpm
+    network_mode: service:network
+    volumes:
+      - ./:/data
+    environment:
+      <<: *otel-common
+
+  ##################
+  # CLI
+  ##################
+
+  php-cli:
+    build:
+      context: ./docker/compose/php-cli
+    command: /bin/bash -c "sleep infinity"
+    network_mode: service:network
+    volumes:
+      - ./:/data
+    environment:
+      <<: *otel-common
+
+  ##################
+  # Databases
+  ##################
+
+  mysql-default:
+    image: skpr/mtk-mysql-empty:latest
+    network_mode: service:network
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      interval: 1s
+      retries: 60
+
+  ##################
+  # Services
+  ##################
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.52.0
+    restart: always
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
