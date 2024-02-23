@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Theme\ThemeManager;
+use Drupal\page_cache\StackMiddleware\PageCache;
 
 final class DrupalInstrumentation
 {
@@ -120,21 +121,20 @@ final class DrupalInstrumentation
         );
 
         hook(
-            ModuleHandler::class,
-            'invokeAllWith',
+            DrupalKernel::class,
+            'initializeSettings',
             pre: static function (
-                ModuleHandler $moduleHandler,
+                DrupalKernel $kernel,
                 array $params,
                 string $class,
                 string $function,
                 ?string $filename,
                 ?int $lineno,
             ) use ($instrumentation): array {
-                $hook = $params[0];
-
+                /** @psalm-suppress ArgumentTypeCoercion */
                 $builder = $instrumentation
                     ->tracer()
-                    ->spanBuilder($hook)
+                    ->spanBuilder("INITIALIZE SETTINGS")
                     ->setSpanKind(SpanKind::KIND_INTERNAL)
                     ->setAttribute(TraceAttributes::CODE_FUNCTION, $function)
                     ->setAttribute(TraceAttributes::CODE_NAMESPACE, $class)
@@ -152,7 +152,7 @@ final class DrupalInstrumentation
                 return $params;
             },
             post: static function (
-                ModuleHandler $moduleHandler,
+                DrupalKernel $kernel,
                 array $params,
                 ?\Throwable $exception
             ): void {
@@ -162,14 +162,58 @@ final class DrupalInstrumentation
                 }
 
                 $scope->detach();
+
                 $span = Span::fromContext($scope->context());
 
-                if (null !== $exception) {
-                    $span->recordException($exception, [
-                        TraceAttributes::EXCEPTION_ESCAPED => true,
-                    ]);
-                    $span->setStatus(StatusCode::STATUS_ERROR, $exception->getMessage());
+                $span->end();
+            }
+        );
+
+        hook(
+            PageCache::class,
+            'handle',
+            pre: static function (
+                PageCache $cache,
+                array $params,
+                string $class,
+                string $function,
+                ?string $filename,
+                ?int $lineno,
+            ) use ($instrumentation): array {
+                /** @psalm-suppress ArgumentTypeCoercion */
+                $builder = $instrumentation
+                    ->tracer()
+                    ->spanBuilder("PAGE CACHE")
+                    ->setSpanKind(SpanKind::KIND_INTERNAL)
+                    ->setAttribute(TraceAttributes::CODE_FUNCTION, $function)
+                    ->setAttribute(TraceAttributes::CODE_NAMESPACE, $class)
+                    ->setAttribute(TraceAttributes::CODE_FILEPATH, $filename)
+                    ->setAttribute(TraceAttributes::CODE_LINENO, $lineno);
+
+                $parent = Context::getCurrent();
+                $span = $builder
+                    ->setParent($parent)
+                    ->startSpan();
+
+                $context = $span->storeInContext($parent);
+                Context::storage()->attach($context);
+
+                return $params;
+            },
+            post: static function (
+                PageCache $cache,
+                array $params,
+                ?Response $response,
+                ?\Throwable $exception
+            ): void {
+                $scope = Context::storage()->scope();
+                if (null === $scope) {
+                    return;
                 }
+
+                $scope->detach();
+
+                $span = Span::fromContext($scope->context());
 
                 $span->end();
             }

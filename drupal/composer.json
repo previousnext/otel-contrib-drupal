@@ -28,7 +28,8 @@
         "drupal/core-recommended": "^10.1",
         "drush/drush": "^12.4",
         "nickschuch/opentelemetry-auto-drupal": "@dev",
-        "open-telemetry/exporter-otlp": "1.0.0"
+        "open-telemetry/exporter-otlp": "1.0.0",
+        "skpr/config": "^3.0"
     },
     "conflict": {
         "drupal/drupal": "*"

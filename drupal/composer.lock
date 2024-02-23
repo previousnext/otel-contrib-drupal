@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de0b7790128c931ae97040bc95b36da2",
+    "content-hash": "71d334d107b7b7b128dab5419423ce69",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3897,6 +3897,47 @@
                 }
             ],
             "time": "2023-05-07T05:35:17+00:00"
+        },
+        {
+            "name": "skpr/config",
+            "version": "3.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/skpr/php-config.git",
+                "reference": "30b07f15e085390e6aff86a3755a64e239455ac6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/skpr/php-config/zipball/30b07f15e085390e6aff86a3755a64e239455ac6",
+                "reference": "30b07f15e085390e6aff86a3755a64e239455ac6",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^7.2||^8.0"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
+                "drupal/coder": "~8.3.12",
+                "phpcompatibility/php-compatibility": "^9.3",
+                "phpunit/phpunit": "^8.5||^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Skpr\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Reads skipper configuration files.",
+            "support": {
+                "issues": "https://github.com/skpr/php-config/issues",
+                "source": "https://github.com/skpr/php-config/tree/3.0.2"
+            },
+            "time": "2022-12-15T07:08:17+00:00"
         },
         {
             "name": "symfony/console",

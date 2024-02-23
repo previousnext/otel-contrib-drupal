@@ -1,0 +1,4 @@
+{
+    "otel.drupal.enabled": "true",
+    "otel.drupal_views.enabled": "true"
+}
