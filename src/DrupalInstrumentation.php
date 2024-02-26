@@ -19,6 +19,8 @@ use Drupal\Core\DrupalKernel;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Theme\ThemeManager;
 use Drupal\page_cache\StackMiddleware\PageCache;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class DrupalInstrumentation
 {
@@ -77,18 +79,6 @@ final class DrupalInstrumentation
 
                 $span = Span::fromContext($scope->context());
 
-                $request = ($params[0] instanceof Request) ? $params[0] : null;
-                if (null !== $request) {
-                    $routeName = $request->attributes->get('_route', '');
-
-                    if ('' !== $routeName) {
-                        /** @psalm-suppress ArgumentTypeCoercion */
-                        $span
-                            ->updateName(sprintf('%s %s', $request->getMethod(), $routeName))
-                            ->setAttribute(TraceAttributes::HTTP_ROUTE, $routeName);
-                    }
-                }
-
                 if (null !== $exception) {
                     $span->recordException($exception, [
                         TraceAttributes::EXCEPTION_ESCAPED => true,
@@ -121,20 +111,22 @@ final class DrupalInstrumentation
         );
 
         hook(
-            DrupalKernel::class,
-            'initializeSettings',
+            HttpKernelInterface::class,
+            'handle',
             pre: static function (
-                DrupalKernel $kernel,
+                HttpKernelInterface $kernel,
                 array $params,
                 string $class,
                 string $function,
                 ?string $filename,
                 ?int $lineno,
             ) use ($instrumentation): array {
+                 $messageClass = \get_class($kernel);
+                
                 /** @psalm-suppress ArgumentTypeCoercion */
                 $builder = $instrumentation
                     ->tracer()
-                    ->spanBuilder("INITIALIZE SETTINGS")
+                    ->spanBuilder($messageClass)
                     ->setSpanKind(SpanKind::KIND_INTERNAL)
                     ->setAttribute(TraceAttributes::CODE_FUNCTION, $function)
                     ->setAttribute(TraceAttributes::CODE_NAMESPACE, $class)
@@ -152,8 +144,9 @@ final class DrupalInstrumentation
                 return $params;
             },
             post: static function (
-                DrupalKernel $kernel,
+                HttpKernelInterface $kernel,
                 array $params,
+                ?Response $response,
                 ?\Throwable $exception
             ): void {
                 $scope = Context::storage()->scope();
@@ -170,20 +163,22 @@ final class DrupalInstrumentation
         );
 
         hook(
-            PageCache::class,
+            EventSubscriberInterface::class,
             'handle',
             pre: static function (
-                PageCache $cache,
+                HttpKernelInterface $kernel,
                 array $params,
                 string $class,
                 string $function,
                 ?string $filename,
                 ?int $lineno,
             ) use ($instrumentation): array {
+                 $messageClass = \get_class($kernel);
+                
                 /** @psalm-suppress ArgumentTypeCoercion */
                 $builder = $instrumentation
                     ->tracer()
-                    ->spanBuilder("PAGE CACHE")
+                    ->spanBuilder($messageClass)
                     ->setSpanKind(SpanKind::KIND_INTERNAL)
                     ->setAttribute(TraceAttributes::CODE_FUNCTION, $function)
                     ->setAttribute(TraceAttributes::CODE_NAMESPACE, $class)
@@ -201,7 +196,7 @@ final class DrupalInstrumentation
                 return $params;
             },
             post: static function (
-                PageCache $cache,
+                HttpKernelInterface $kernel,
                 array $params,
                 ?Response $response,
                 ?\Throwable $exception
