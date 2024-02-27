@@ -21,7 +21,7 @@ final class EntityInstrumentation
 
     public static function register(): void
     {
-        $instrumentation = new CachedInstrumentation('io.opentelemetry.contrib.php.drupal_views');
+        $instrumentation = new CachedInstrumentation('io.opentelemetry.contrib.php.drupal_entity');
 
         hook(
             SqlContentEntityStorage::class,
