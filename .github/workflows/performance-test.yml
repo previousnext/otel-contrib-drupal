@@ -1,0 +1,55 @@
+name: 📋 Performance Test
+
+on:
+  pull_request:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+
+concurrency:
+  group: preview-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  K6_SCRIPTS_DIR: ./performance-testing/scripts
+  K6_SCENARIO: ./performance-testing/scenarios/basic.js
+  K6_RESULTS_DIR: ./performance-testing/results
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Git clone the repository
+        uses: actions/checkout@v3
+
+      - name: 📁 Init
+        run: |
+          # Set permissions for checkout.
+          sudo chown -R 1000:1000 $(pwd)
+
+          # Create performance testing results directory.
+          sudo mkdir -p ${K6_RESULTS_DIR}
+          sudo chmod 777 ${K6_RESULTS_DIR}
+
+      - name: 📦 Setup
+        run: |
+          OTEL_PHP_AUTOLOAD_ENABLED=false docker compose up -d --wait
+          docker compose exec php-cli composer install --prefer-dist
+          docker compose exec php-cli ./vendor/drush/drush/drush si demo_umami -y
+      
+      - name: 🧪 K6 - Execute Baseline Performance Test
+        run: |
+          bash ${K6_SCRIPTS_DIR}/k6_run.sh ${K6_SCENARIO} ${K6_RESULTS_DIR} baseline.json
+
+      - name: ⚙️ Enable OTEL
+        run: |
+          docker compose stop
+          docker compose up -d --wait
+
+      - name: 🧪 K6 - Execute OpenTelemetry Enabled Performance Test
+        run: |
+          bash ${K6_SCRIPTS_DIR}/k6_run.sh ${K6_SCENARIO} ${K6_RESULTS_DIR} otel.json
+
+      - name: 📋 Review Test Results
+        run: |
+          BUDGET=200
+          bash ${K6_SCRIPTS_DIR}/review_results.sh ${K6_RESULTS_DIR}/baseline.json ${K6_RESULTS_DIR}/otel.json ${BUDGET}
