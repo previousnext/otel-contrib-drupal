@@ -59,6 +59,8 @@ services:
       - ./:/data
       - ./docker/compose/volume/etc/skpr/data:/etc/skpr/data
     environment:
+      DRUSH_OPTIONS_URI: http://127.0.0.1:8080
+      PATH: ${PATH}:/data/drupal/vendor/bin
       <<: *otel-common
 
   ##################
