@@ -14,7 +14,7 @@ env:
   K6_RESULTS_DIR: ./performance-testing/results
 
 jobs:
-  performance-test:
+  run:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,13 +34,13 @@ jobs:
         run: |
           OTEL_PHP_AUTOLOAD_ENABLED=false docker compose up -d --wait
           docker compose exec php-cli composer install --prefer-dist
-          docker compose exec php-cli ./vendor/drush/drush/drush si demo_umami -y
+          docker compose exec php-cli drush si demo_umami -y
       
       - name: 🧪 K6 - Execute Baseline Performance Test
         run: |
           bash ${K6_SCRIPTS_DIR}/k6_run.sh ${K6_SCENARIO} ${K6_RESULTS_DIR} baseline.json
 
-      - name: ⚙️ Enable OTEL
+      - name: ⚙️ Enable OpenTelemetry Auto Instrumentation
         run: |
           docker compose stop
           docker compose up -d --wait
@@ -52,4 +52,21 @@ jobs:
       - name: 📋 Review Test Results
         run: |
           BUDGET=200
-          bash ${K6_SCRIPTS_DIR}/review_results.sh ${K6_RESULTS_DIR}/baseline.json ${K6_RESULTS_DIR}/otel.json ${BUDGET}
+          bash ${K6_SCRIPTS_DIR}/review_results.sh ${K6_RESULTS_DIR}/baseline.json ${K6_RESULTS_DIR}/otel.json ${BUDGET} ${K6_RESULTS_DIR}/comment.txt
+
+      - name: 📦 Collect Test Result Comment Details
+        id: comment
+        if: always()
+        run: |
+          results=$(cat ${K6_RESULTS_DIR}/comment.txt)
+          echo "results=$results" >> "$GITHUB_OUTPUT"
+
+      - name: 📋 Post Test Results to Comment
+        uses: peter-evans/create-or-update-comment@v4
+        if: always()
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Performance Data
+            ----------------
+            ${{ steps.comment.outputs.results }}

@@ -19,6 +19,7 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   BASELINE_FILE=$1
   OTEL_FILE=$2
   BUDGET=$3
+  PRETTY_REPORT=$4
 
   info "Starting performance review..."
 
@@ -52,6 +53,8 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   fi
 
   http_req_duration_diff=`expr $http_req_duration_otel - $http_req_duration_baseline`
+
+  echo "Before = ${http_req_duration_baseline}ms  |  After = ${http_req_duration_otel}ms  |  Difference = ${http_req_duration_diff}ms" > $PRETTY_REPORT
 
   info "http_req_duration diff = ${http_req_duration_diff}"
 
