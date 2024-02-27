@@ -44,6 +44,7 @@ services:
       - ./:/data
       - ./docker/compose/volume/etc/skpr/data:/etc/skpr/data
     environment:
+      PHP_IDE_CONFIG: serverName=localhost
       <<: *otel-common
 
   ##################

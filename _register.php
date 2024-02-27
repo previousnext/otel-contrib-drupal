@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OpenTelemetry\Contrib\Instrumentation\Drupal\DrupalInstrumentation;
+use OpenTelemetry\Contrib\Instrumentation\Drupal\EntityInstrumentation;
 use OpenTelemetry\Contrib\Instrumentation\Drupal\ViewsInstrumentation;
 use Skpr\SkprConfig;
 
@@ -19,4 +20,8 @@ if ($skpr->get('otel.drupal.enabled')) {
 
 if ($skpr->get('otel.drupal_views.enabled')) {
   ViewsInstrumentation::register();
+}
+
+if ($skpr->get('otel.drupal_entity.enabled')) {
+  EntityInstrumentation::register();
 }
