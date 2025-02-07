@@ -6,7 +6,8 @@ USER root
 
 RUN apk --update --no-cache add \
      php8.3-opentelemetry \
-     php8.3-grpc
+     php8.3-grpc \
+     php8.3-protobuf
 
 USER skpr
 
