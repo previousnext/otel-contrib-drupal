@@ -5,9 +5,7 @@ x-otel-common:
   OTEL_TRACES_EXPORTER: otlp
   OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: http/protobuf
   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
-  OTEL_PHP_TRACES_PROCESSOR: simple
-
-version: "3.8"
+  OTEL_PHP_TRACES_PROCESSOR: batch
 
 services:
 
