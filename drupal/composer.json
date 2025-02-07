@@ -29,6 +29,7 @@
         "drush/drush": "^12.4",
         "nickschuch/opentelemetry-auto-drupal": "@dev",
         "open-telemetry/exporter-otlp": "1.0.0",
+        "open-telemetry/opentelemetry-auto-pdo": "^0.0.12",
         "skpr/config": "^3.0"
     },
     "conflict": {
